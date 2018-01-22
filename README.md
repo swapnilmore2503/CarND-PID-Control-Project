@@ -3,6 +3,28 @@ This Project is the ninth task (Project 4 of Term 2) of the Udacity Self-Driving
 
 The project was created with the Udacity [Starter Code](https://github.com/udacity/CarND-PID-Control-Project).
 
+## About PID controller
+
+A PID (Proportional, Integral, Derivative) controller is a control loop feedback controller which is widely used in different control systems.
+
+Error is an input variable for the controller:
+
+_cte = desired_state - measured_state_
+
+With the proportional band (_P_) only, the PID controller output is proportional to the cte. It takes into account only the present value of cte. Thanks to this part of controller, it is able to steer in the correct direction.
+
+Integral term (_I_) takes into account the integral of cte over the past time. It is used to reduce systematic bias. 
+
+With derivative (_D_) part, the controller output is proportional to the rate of change of cte (its derivative). The parameter is used to reduce overshooting and dump oscillations caused by the _P_.
+
+## Tuning Process
+The parameters were tuned using the Ziegler Nichols Method. Keeping Kd = 0 and Ki = 0, Kp has to be increased incrementally till the response of the vehicle reaches marginal stability i.e. the response oscillates with a constant amplitude. This gain Kp is termed as Ku or ultimate gain and the period of oscillation is called Tu. Then the formula for a PID controller is given by:
+Kp = 0.6 Ku;
+Ki = Kp * 2 / Tu;
+Kd = Kp * Tu / 8;
+
+Due to inability to calculate Tu accurately, an approximation was made for the value and then the calculated Kp, Ki and Kd were tuned based on trial and error.
+
 ## Dependencies
 
 * cmake >= 3.5
