@@ -33,15 +33,15 @@ int main()
     uWS::Hub h;
     PID pid;
     // TODO: Initialize the pid variable.
-    time = 0.0; // Placeholder for current time
-    pre_time = clock(); // Previous time
-    double total_time = 0.0; // Total time
-    pid.Init(0.3, 0.01, 0.004);
+    pid.Init(0.35, 0.01, 0.004);
     
     h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
+        double time_t = 0.0; // Placeholder for current time
+        double pre_time = clock(); // Previous time
+        double total_time = 0.0; // Total time
         if (length && length > 2 && data[0] == '4' && data[1] == '2')
         {
          auto s = hasData(std::string(data).substr(0, length));
@@ -53,26 +53,49 @@ int main()
              double cte = std::stod(j[1]["cte"].get<std::string>());
              double speed = std::stod(j[1]["speed"].get<std::string>());
              double angle = std::stod(j[1]["steering_angle"].get<std::string>());
-             double steer_value;
+             double steer_value = 0;
             /*
             * TODO: Calcuate steering value here, remember the steering value is
             * [-1, 1].
             * NOTE: Feel free to play around with the throttle and speed. Maybe use
             * another PID controller to control the speed!
             */
-               time = clock();
-               double dt = (time - pre_time) / CLOCK_PER_SEC;
+               time_t = clock();
+               double dt = (time_t - pre_time) / CLOCKS_PER_SEC;
+               
+               // Throttle Control
+               double throttle = 0.8;
+               if (fabs(cte) > 0.5) {
+                   throttle = 0.5;
+               }
+               if (fabs(cte - pid.p_error) > 0.1 and fabs(cte - pid.p_error) <= 0.2) {
+                   throttle = 0.0;
+               }
+               else if (fabs(cte - pid.p_error) > 0.2 and speed > 25) {
+                   throttle = -0.3;
+               }
+               else {
+                   throttle = 0.2;
+               }
+               
+               // Steering Control
+               pid.UpdateError(cte, dt);
+               steer_value = -pid.TotalError(speed);
+               steer_value = pid.saturate(steer_value);
+               
             
           
           // DEBUG
-            std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
+               std::cout << "CTE: " << cte << " Steering Value: " << steer_value << "Throttle: " << throttle << "Steering Angle" << angle << std::endl;
 
             json msgJson;
             msgJson["steering_angle"] = steer_value;
-            msgJson["throttle"] = 0.3;
+            msgJson["throttle"] = throttle;
             auto msg = "42[\"steer\"," + msgJson.dump() + "]";
             std::cout << msg << std::endl;
             ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+            pre_time = time_t;
+            total_time += time_t;
         }
     }   else {
             // Manual driving
