@@ -41,11 +41,7 @@ public:
   * Calculate the total PID error.
   */
   double TotalError(double speed);
-  int *interval;
-  int i;
-  double sum;
-    double pre_cte;
-  double total_i(double error);
+  double pre_cte;
   double saturate(double steer);
 };
 

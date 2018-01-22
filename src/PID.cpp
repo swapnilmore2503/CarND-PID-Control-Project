@@ -22,15 +22,12 @@ void PID::Init(double Kp, double Ki, double Kd) {
     i_error = 0;
     d_error = 0;
     pre_cte = 0;
-    interval = (int*) calloc(intervallen, sizeof(interval[0])) ;
-    i = intervallen - 1 ;
-    sum = 0 ;
 }
 
 void PID::UpdateError(double cte, double dt) {
     d_error = (cte - pre_cte) / dt;
     p_error = cte;
-    i_error = total_i(cte * dt);
+    i_error += cte;
     pre_cte = cte;
     
 }
@@ -43,14 +40,6 @@ double PID::TotalError(double speed) {
     double b = 0.0002;
     return (Kp - a * speed) * p_error + Ki * i_error + (Kd + b * speed) * d_error;
     //return -Kp * p_error - Ki * i_error - Kd * d_error;
-}
-
-// Calculate integral only over a small time interval to avoid cumulative integral bias
-// Reference: https://stackoverflow.com/questions/25024012/running-sum-of-the-last-n-integers-in-an-array
-double PID::total_i(double error){
-    i = (i+1) % intervallen ;
-    sum = sum - interval[i] + error ;
-    return sum;
 }
 
 // Saturate Steer Value between [-1, 1]
